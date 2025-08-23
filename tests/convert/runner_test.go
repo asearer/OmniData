@@ -9,6 +9,7 @@ import (
 	_ "omnidata/internal/formats" // triggers init() for format registration
 )
 
+// tempFile creates a temporary file with the given content and returns its path.
 func tempFile(t *testing.T, content []byte) string {
 	f, err := os.CreateTemp("", "testfile")
 	if err != nil {
@@ -21,13 +22,14 @@ func tempFile(t *testing.T, content []byte) string {
 	return f.Name()
 }
 
+// TestRunDryRun tests that the dry-run mode executes without writing any output.
 func TestRunDryRun(t *testing.T) {
 	input := tempFile(t, []byte("name,age\nAlice,30"))
 	defer os.Remove(input)
 
 	opts := convert.Options{
 		InputFile:  input,
-		OutputFile: "out.json",
+		OutputFile: "out.json", // should not be created
 		From:       "csv",
 		To:         "json",
 		DryRun:     true,
@@ -36,8 +38,14 @@ func TestRunDryRun(t *testing.T) {
 	if err := convert.Run(opts); err != nil {
 		t.Fatalf("dry-run failed: %v", err)
 	}
+
+	// Ensure file was not created
+	if _, err := os.Stat(opts.OutputFile); err == nil {
+		t.Fatal("output file should not be created in dry-run mode")
+	}
 }
 
+// TestRunCSVtoJSON tests a full CSV -> JSON conversion.
 func TestRunCSVtoJSON(t *testing.T) {
 	inputCSV := tempFile(t, []byte("name,age\nAlice,30"))
 	defer os.Remove(inputCSV)
@@ -57,6 +65,7 @@ func TestRunCSVtoJSON(t *testing.T) {
 		t.Fatalf("conversion failed: %v", err)
 	}
 
+	// Verify output file exists and is not empty
 	data, err := os.ReadFile(outputJSON)
 	if err != nil {
 		t.Fatalf("failed to read output: %v", err)

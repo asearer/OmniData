@@ -3,9 +3,14 @@ package convert
 import (
 	"fmt"
 	"os"
+	"runtime"
 )
 
-// ValidateFormats checks if source and target formats are supported
+// ValidateFormats checks if the source and target formats are supported.
+//
+// Returns an error if:
+// - Either format is not registered in the Registry.
+// - Source and target formats are the same.
 func ValidateFormats(from, to string) error {
 	if _, ok := Registry[from]; !ok {
 		return fmt.Errorf("unsupported source format: %s", from)
@@ -19,28 +24,62 @@ func ValidateFormats(from, to string) error {
 	return nil
 }
 
-// ResolvePaths normalizes STDIN/STDOUT and checks files
+// ResolvePaths normalizes input/output paths and checks file validity.
+//
+// Supports:
+// - "-" for STDIN/STDOUT (cross-platform).
+// - Ensures input file exists and is not a directory.
+// - Prevents accidental overwrite of output file unless DryRun is true.
+//
+// Returns normalized input and output paths (empty string indicates STDIN/STDOUT).
 func ResolvePaths(opts Options) (string, string, error) {
-	in := opts.InputFile
-	out := opts.OutputFile
+	inputPath := opts.InputFile
+	outputPath := opts.OutputFile
 
-	// Input
-	if in == "-" {
-		in = "/dev/stdin"
+	// ---------------------------
+	// Handle Input
+	// ---------------------------
+	if inputPath == "-" {
+		// Cross-platform STDIN placeholder
+		inputPath = ""
 	} else {
-		if _, err := os.Stat(in); os.IsNotExist(err) {
-			return "", "", fmt.Errorf("input file does not exist: %s", in)
+		info, err := os.Stat(inputPath)
+		if err != nil {
+			if os.IsNotExist(err) {
+				return "", "", fmt.Errorf("input file does not exist: %s", inputPath)
+			}
+			return "", "", fmt.Errorf("cannot access input file '%s': %w", inputPath, err)
+		}
+		if info.IsDir() {
+			return "", "", fmt.Errorf("input path is a directory: %s", inputPath)
 		}
 	}
 
-	// Output
-	if out == "-" {
-		out = "/dev/stdout"
+	// ---------------------------
+	// Handle Output
+	// ---------------------------
+	if outputPath == "-" {
+		// Cross-platform STDOUT placeholder
+		outputPath = ""
 	} else if !opts.DryRun {
-		if _, err := os.Stat(out); err == nil {
-			return "", "", fmt.Errorf("output file already exists: %s (use --force to overwrite)", out)
+		if _, err := os.Stat(outputPath); err == nil {
+			// File exists: prevent accidental overwrite
+			return "", "", fmt.Errorf("output file already exists: %s (use --force to overwrite)", outputPath)
+		} else if !os.IsNotExist(err) {
+			// Unexpected error accessing file
+			return "", "", fmt.Errorf("cannot access output file '%s': %w", outputPath, err)
 		}
 	}
 
-	return in, out, nil
+	// On Windows, normalize STDIN/STDOUT for handlers
+	if runtime.GOOS == "windows" {
+		if inputPath == "" {
+			inputPath = "CON"
+		}
+		if outputPath == "" {
+			outputPath = "CON"
+		}
+	}
+
+	return inputPath, outputPath, nil
 }

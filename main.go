@@ -8,6 +8,7 @@ Entry point for the OmniData CLI tool.
 Responsibilities:
 - Execute the root command of the CLI.
 - Handle errors gracefully and exit with a non-zero status code if needed.
+- Ensure proper initialization of subcommands and format handlers.
 */
 
 import (
@@ -20,9 +21,9 @@ import (
 func main() {
 	// Execute the root command (defined in cmd/root.go)
 	if err := cmd.Execute(); err != nil {
-		// Print errors to STDERR
+		// Print errors to STDERR for visibility
 		fmt.Fprintln(os.Stderr, "Error:", err)
-		// Exit with non-zero status code
+		// Exit with non-zero status code to indicate failure
 		os.Exit(1)
 	}
 }
