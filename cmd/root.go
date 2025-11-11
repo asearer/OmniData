@@ -35,7 +35,10 @@ func Execute() {
 	// Execute the root command
 	if err := rootCmd.Execute(); err != nil {
 		// Print the error in a user-friendly way
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		fprintf, err := fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		if err != nil {
+			return
+		}
 		// Exit with a non-zero status code to indicate failure
 		os.Exit(1)
 	}
@@ -53,7 +56,10 @@ func init() {
 		versionFlag, err := cmd.Flags().GetBool("version")
 		if err != nil {
 			// Unexpected error retrieving the flag
-			fmt.Fprintf(os.Stderr, "Failed to read version flag: %v\n", err)
+			fprintf, err := fmt.Fprintf(os.Stderr, "Failed to read version flag: %v\n", err)
+			if err != nil {
+				return
+			}
 			os.Exit(1)
 		}
 		if versionFlag {

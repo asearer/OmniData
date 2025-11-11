@@ -72,6 +72,12 @@ func init() {
 	convertCmd.Flags().BoolVarP(&stream, "stream", "s", false, "Use streaming mode for large files (memory-efficient)")
 
 	// Mark required flags for input/output
-	convertCmd.MarkFlagRequired("input")
-	convertCmd.MarkFlagRequired("output")
+	err := convertCmd.MarkFlagRequired("input")
+	if err != nil {
+		return
+	}
+	err = convertCmd.MarkFlagRequired("output")
+	if err != nil {
+		return
+	}
 }

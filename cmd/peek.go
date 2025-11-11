@@ -60,8 +60,14 @@ func init() {
 	peekCmd.Flags().StringVarP(&peekOutputFile, "output", "o", "", "Output file path (optional, '-' for STDOUT)")
 	peekCmd.Flags().StringVar(&peekOutputFmt, "output-format", "", "Output format (markdown/html/json)")
 
-	peekCmd.MarkFlagRequired("input")
-	peekCmd.MarkFlagRequired("format")
+	err := peekCmd.MarkFlagRequired("input")
+	if err != nil {
+		return
+	}
+	err = peekCmd.MarkFlagRequired("format")
+	if err != nil {
+		return
+	}
 }
 
 func runPeekWithOutput(opts inspect.PeekOptions, outputFormat, outputFile string) error {

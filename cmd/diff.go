@@ -59,10 +59,22 @@ func init() {
 	diffCmd.Flags().StringVarP(&diffOutputFile, "output", "o", "", "Output file path (optional, '-' for STDOUT)")
 	diffCmd.Flags().StringVar(&diffOutputFmt, "output-format", "", "Output format (markdown/html/json)")
 
-	diffCmd.MarkFlagRequired("file1")
-	diffCmd.MarkFlagRequired("file2")
-	diffCmd.MarkFlagRequired("format1")
-	diffCmd.MarkFlagRequired("format2")
+	err := diffCmd.MarkFlagRequired("file1")
+	if err != nil {
+		return
+	}
+	err = diffCmd.MarkFlagRequired("file2")
+	if err != nil {
+		return
+	}
+	err = diffCmd.MarkFlagRequired("format1")
+	if err != nil {
+		return
+	}
+	err = diffCmd.MarkFlagRequired("format2")
+	if err != nil {
+		return
+	}
 }
 
 func runDiffWithOutput(opts inspect.DiffOptions, outputFormat, outputFile string) error {
