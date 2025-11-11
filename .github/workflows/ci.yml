@@ -41,9 +41,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
+      - name: Print Go environment
+        run: go env
+
       - name: Ensure modules are available
         run: |
-          go env
           go mod download
           go mod verify
 
