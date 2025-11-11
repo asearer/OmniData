@@ -49,3 +49,42 @@ func TestXMLReadWrite(t *testing.T) {
 		t.Fatal("output XML does not contain expected content")
 	}
 }
+
+func TestXML_InvalidCases(t *testing.T) {
+	handler, ok := convert.GetFormat("xml")
+	if !ok {
+		t.Fatal("XML handler not registered")
+	}
+	// Invalid type for WriterFn
+	if err := handler.WriterFn("foo.xml", make(chan int)); err == nil {
+		t.Error("expected error for invalid type, got nil")
+	}
+	// Non-existent file on read
+	_, err := handler.ReaderFn("/tmp/no-such-file.xml")
+	if err == nil {
+		t.Error("expected error for missing file, got nil")
+	}
+	// Directory as input
+	dir := os.TempDir()
+	_, err = handler.ReaderFn(dir)
+	if err == nil {
+		t.Error("expected error for directory input, got nil")
+	}
+	// Bad/malformed XML
+	tmp, _ := os.CreateTemp(os.TempDir(), "bad.xml")
+	tmp.Write([]byte("<not>"))
+	tmp.Close()
+	defer os.Remove(tmp.Name())
+	_, err = handler.ReaderFn(tmp.Name())
+	if err == nil {
+		t.Error("expected error for malformed XML, got nil")
+	}
+	// Empty file (should error, not panic)
+	empty, _ := os.CreateTemp(os.TempDir(), "empty.xml")
+	empty.Close()
+	defer os.Remove(empty.Name())
+	_, err = handler.ReaderFn(empty.Name())
+	if err == nil {
+		t.Error("expected error for empty file, got nil")
+	}
+}

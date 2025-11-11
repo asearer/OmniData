@@ -3,10 +3,10 @@
 > 🧠 A forward-thinking, lightweight **universal data translator and inspector** written in Go.
 > Work with heterogeneous structured data formats (CSV, JSON, XML, SQL, Excel, Parquet, Avro, and beyond) directly from the terminal.
 
+[![CI](https://github.com/asearer/OmniData/actions/workflows/ci.yml/badge.svg)](https://github.com/asearer/OmniData/actions/workflows/ci.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/asearer/OmniData)](https://goreportcard.com/report/github.com/asearer/OmniData)
-[![Build](https://github.com/asearer/OmniData/actions/workflows/build.yml/badge.svg)](https://github.com/asearer/OmniData/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/asearer/OmniData)](go.mod)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
 
@@ -45,8 +45,17 @@ go build -o omnidata
 
 ```bash
 docker build -t omnidata .
-docker run --rm -v $(pwd):/data omnidata convert /data/input.csv /data/output.json
+docker run --rm -v "$(pwd)":/data omnidata convert /data/input.csv /data/output.json
 ```
+
+---
+
+## 🛠️ CI/CD
+
+- Automated CI is powered by **GitHub Actions**! Each push or PR runs:
+  - Full Go build/lint/test
+  - Docker build (verifies Docker image compiles successfully)
+- See the latest results and workflow run details above.
 
 ---
 

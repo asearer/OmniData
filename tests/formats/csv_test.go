@@ -46,3 +46,34 @@ func TestCSVReadWrite(t *testing.T) {
 		t.Fatal("output CSV file is empty")
 	}
 }
+
+func TestCSV_InvalidCases(t *testing.T) {
+	handler, ok := convert.GetFormat("csv")
+	if !ok {
+		t.Fatal("CSV handler not registered")
+	}
+	// Invalid type for WriterFn
+	if err := handler.WriterFn("foo.csv", 12345); err == nil {
+		t.Error("expected error for invalid type, got nil")
+	}
+	// Non-existent file on read
+	_, err := handler.ReaderFn("/tmp/no-such-file.csv")
+	if err == nil {
+		t.Error("expected error for missing file, got nil")
+	}
+	// Directory as input
+	dir := os.TempDir()
+	_, err = handler.ReaderFn(dir)
+	if err == nil {
+		t.Error("expected error for directory input, got nil")
+	}
+	// Empty file
+	tmp, _ := os.CreateTemp(os.TempDir(), "empty.csv")
+	tmp.Close()
+	defer os.Remove(tmp.Name())
+	_, err = handler.ReaderFn(tmp.Name())
+	if err != nil {
+		// Accept EOF, but no error (should not panic)
+		t.Errorf("unexpected error for empty file: %v", err)
+	}
+}

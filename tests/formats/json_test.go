@@ -46,3 +46,42 @@ func TestJSONReadWrite(t *testing.T) {
 		t.Fatalf("unexpected number of objects in JSON: got %d, want 2", len(arr))
 	}
 }
+
+func TestJSON_InvalidCases(t *testing.T) {
+	handler, ok := convert.GetFormat("json")
+	if !ok {
+		t.Fatal("JSON handler not registered")
+	}
+	// Invalid type for WriterFn
+	if err := handler.WriterFn("foo.json", make(chan int)); err == nil {
+		t.Error("expected error for invalid type, got nil")
+	}
+	// Non-existent file on read
+	_, err := handler.ReaderFn("/tmp/no-such-file.json")
+	if err == nil {
+		t.Error("expected error for missing file, got nil")
+	}
+	// Directory as input
+	dir := os.TempDir()
+	_, err = handler.ReaderFn(dir)
+	if err == nil {
+		t.Error("expected error for directory input, got nil")
+	}
+	// Bad/malformed JSON
+	tmp, _ := os.CreateTemp(os.TempDir(), "bad.json")
+	tmp.Write([]byte("not-json"))
+	tmp.Close()
+	defer os.Remove(tmp.Name())
+	_, err = handler.ReaderFn(tmp.Name())
+	if err == nil {
+		t.Error("expected error for malformed JSON, got nil")
+	}
+	// Empty file (should error, not panic)
+	empty, _ := os.CreateTemp(os.TempDir(), "empty.json")
+	empty.Close()
+	defer os.Remove(empty.Name())
+	_, err = handler.ReaderFn(empty.Name())
+	if err == nil {
+		t.Error("expected error for empty file, got nil")
+	}
+}

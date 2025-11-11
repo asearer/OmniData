@@ -74,3 +74,66 @@ func TestRunCSVtoJSON(t *testing.T) {
 		t.Fatal("output JSON is empty")
 	}
 }
+
+func TestRun_Errors(t *testing.T) {
+	input := tempFile(t, []byte("name,age\nAlice,30"))
+	defer os.Remove(input)
+
+	// File not found
+	opts := convert.Options{
+		InputFile:  "/tmp/nope.csv",
+		OutputFile: "nope.json",
+		From:       "csv",
+		To:         "json",
+	}
+	err := convert.Run(opts)
+	if err == nil {
+		t.Error("expected error for missing input file, got nil")
+	}
+	// Unsupported from format
+	opts.InputFile = input
+	opts.From = "NOTREAL"
+	err = convert.Run(opts)
+	if err == nil {
+		t.Error("expected error for unknown input format, got nil")
+	}
+	// Unsupported to format
+	opts.From = "csv"
+	opts.To = "UNK"
+	err = convert.Run(opts)
+	if err == nil {
+		t.Error("expected error for unknown output format, got nil")
+	}
+	// Output file exists (should refuse to overwrite)
+	f, _ := os.CreateTemp(os.TempDir(), "alreadythere.json")
+	f.Close()
+	defer os.Remove(f.Name())
+	opts.To = "json"
+	opts.OutputFile = f.Name()
+	err = convert.Run(opts)
+	if err == nil {
+		t.Error("expected error for existing output file, got nil")
+	}
+	// STDIN/STDOUT for unsupported type (xlsx)
+	opts.InputFile = ""
+	opts.OutputFile = ""
+	opts.From = "xlsx"
+	opts.To = "csv"
+	err = convert.Run(opts)
+	if err == nil {
+		t.Error("expected error for reading xlsx from STDIN, got nil")
+	}
+	opts.From = "csv"
+	opts.To = "xlsx"
+	err = convert.Run(opts)
+	if err == nil {
+		t.Error("expected error for writing xlsx to STDOUT, got nil")
+	}
+	// Both formats unknown
+	opts.From = "?"
+	opts.To = "?"
+	err = convert.Run(opts)
+	if err == nil {
+		t.Error("expected error for both formats unknown, got nil")
+	}
+}
