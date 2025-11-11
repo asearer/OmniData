@@ -16,6 +16,7 @@ var (
 	fromFormat string
 	toFormat   string
 	dryRun     bool
+	stream     bool
 )
 
 // convertCmd defines the "convert" subcommand for the CLI.
@@ -42,6 +43,7 @@ Supports CSV, JSON, XML, XLSX (extensible).`,
 			From:       strings.ToLower(fromFormat),
 			To:         strings.ToLower(toFormat),
 			DryRun:     dryRun,
+			Stream:     stream,
 		}
 
 		// Delegate actual conversion to the internal convert engine
@@ -67,6 +69,7 @@ func init() {
 	convertCmd.Flags().StringVar(&fromFormat, "from", "", "Source format (csv/json/xml/xlsx)")
 	convertCmd.Flags().StringVar(&toFormat, "to", "", "Target format (csv/json/xml/xlsx)")
 	convertCmd.Flags().BoolVarP(&dryRun, "dry-run", "d", false, "Preview conversion without writing output")
+	convertCmd.Flags().BoolVarP(&stream, "stream", "s", false, "Use streaming mode for large files (memory-efficient)")
 
 	// Mark required flags for input/output
 	convertCmd.MarkFlagRequired("input")

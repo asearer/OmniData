@@ -2,7 +2,6 @@ package convert
 
 import (
 	"fmt"
-	"os"
 )
 
 /*
@@ -14,6 +13,7 @@ Fields:
 - From: source format name (csv, json, xml, xlsx).
 - To: target format name (csv, json, xml, xlsx).
 - DryRun: if true, simulates conversion without writing output.
+- Stream: if true, uses streaming mode for large files (memory-efficient).
 */
 type Options struct {
 	InputFile  string
@@ -21,6 +21,7 @@ type Options struct {
 	From       string
 	To         string
 	DryRun     bool
+	Stream     bool
 }
 
 /*
@@ -103,46 +104,4 @@ func Run(opts Options) error {
 		opts.InputFile, opts.From, opts.OutputFile, opts.To)
 
 	return nil
-}
-
-/*
-ResolvePaths handles:
-- Cross-platform STDIN/STDOUT
-- Verifying file existence and permissions
-- Preventing accidental overwrite
-*/
-func ResolvePaths(opts Options) (string, string, error) {
-	// Input
-	var inputPath string
-	if opts.InputFile == "-" {
-		inputPath = "" // ReaderFn should handle os.Stdin
-	} else {
-		inputPath = opts.InputFile
-		info, err := os.Stat(inputPath)
-		if err != nil {
-			if os.IsNotExist(err) {
-				return "", "", fmt.Errorf("input file does not exist: %s", inputPath)
-			}
-			return "", "", fmt.Errorf("cannot access input file: %w", err)
-		}
-		if info.IsDir() {
-			return "", "", fmt.Errorf("input path is a directory: %s", inputPath)
-		}
-	}
-
-	// Output
-	var outputPath string
-	if opts.OutputFile == "-" {
-		outputPath = "" // WriterFn should handle os.Stdout
-	} else {
-		outputPath = opts.OutputFile
-		if _, err := os.Stat(outputPath); err == nil {
-			// File exists: optionally warn or overwrite
-			// For now, allow overwrite
-		} else if !os.IsNotExist(err) {
-			return "", "", fmt.Errorf("cannot access output file: %w", err)
-		}
-	}
-
-	return inputPath, outputPath, nil
 }
