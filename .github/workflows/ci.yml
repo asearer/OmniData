@@ -34,11 +34,11 @@ jobs:
     - name: Test
       run: go test -v ./...
 
-    # Example: Use GitHub Actions secret as env var (replace SECRET_NAME with your secret)
-    - name: Placeholder for secret usage
+    
+    - name: OMNIDATA
       run: echo "The secret is $MY_SECRET"
       env:
-        MY_SECRET: ${{ secrets.OMNIDATA_CI }}
+        MY_SECRET: ${{ secrets.OMNIDATA }}
 
     - name: Docker build
       run: docker build -t omnidata:ci .
