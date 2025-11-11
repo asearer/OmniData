@@ -36,9 +36,9 @@ jobs:
 
     
     - name: OMNIDATA
-      run: echo "The secret is $MY_SECRET"
-      env:
-        MY_SECRET: ${{ secrets.OMNIDATA }}
+      run: echo MY_SECRET: ${{ secrets.OMNIDATA }}
+      
+        
 
     - name: Docker build
       run: docker build -t omnidata:ci .
