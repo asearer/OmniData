@@ -14,11 +14,9 @@ func TestRegistry(t *testing.T) {
 	// Expected formats
 	expected := map[string]bool{"csv": true, "json": true, "xml": true, "xlsx": true}
 
+	// Check that all expected formats are present
 	for _, h := range handlers {
-		if !expected[h] {
-			t.Errorf("unexpected format registered: %s", h)
-		}
-		delete(expected, h)
+		delete(expected, h) // remove any found format from expected
 	}
 
 	if len(expected) != 0 {

@@ -260,4 +260,3 @@ func WriteOutput(content string, outputPath string) error {
 
 	return os.WriteFile(outputPath, []byte(content), 0644)
 }
-

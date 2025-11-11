@@ -12,18 +12,11 @@ Responsibilities:
 */
 
 import (
-	"fmt"
-	"os"
-
 	"omnidata/cmd" // Import the CLI commands using the module path
 )
 
 func main() {
 	// Execute the root command (defined in cmd/root.go)
-	if err := cmd.Execute(); err != nil {
-		// Print errors to STDERR for visibility
-		fmt.Fprintln(os.Stderr, "Error:", err)
-		// Exit with non-zero status code to indicate failure
-		os.Exit(1)
-	}
+	// Errors are handled internally by cmd.Execute()
+	cmd.Execute()
 }
