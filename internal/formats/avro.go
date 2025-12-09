@@ -2,7 +2,7 @@ package formats
 
 import (
 	"fmt"
-	"os"
+	"io"
 
 	"omnidata/internal/convert"
 )
@@ -17,30 +17,21 @@ func init() {
 	})
 }
 
-// readAvro reads Avro data from the given path.
-// Returns [][]string containing all rows (similar to CSV).
-func readAvro(path string) (interface{}, error) {
-	if path == "" {
-		return nil, fmt.Errorf("Avro read from STDIN is not supported")
-	}
-
-	// Check if file exists
-	if _, err := os.Stat(path); err != nil {
-		return nil, fmt.Errorf("failed to access Avro file '%s': %w", path, err)
+// readAvro reads Avro data from the given reader.
+func readAvro(r io.Reader, resource string) (interface{}, error) {
+	if r == nil {
+		return nil, fmt.Errorf("readAvro requires a valid reader")
 	}
 
 	// TODO: Implement actual Avro reading
-	// This requires an Avro library like github.com/linkedin/goavro
-	// For now, return an error indicating the feature needs implementation
 	return nil, fmt.Errorf("Avro format support requires additional dependencies. " +
 		"Install with: go get github.com/linkedin/goavro")
 }
 
-// writeAvro writes data to an Avro file at the given path.
-// Expects data as [][]string (rows and columns).
-func writeAvro(path string, data interface{}) error {
-	if path == "" {
-		return fmt.Errorf("Avro write to STDOUT is not supported")
+// writeAvro writes data to an Avro file to the given writer.
+func writeAvro(w io.Writer, resource string, data interface{}) error {
+	if w == nil {
+		return fmt.Errorf("writeAvro requires a valid writer")
 	}
 
 	if _, ok := data.([][]string); !ok {
@@ -48,7 +39,6 @@ func writeAvro(path string, data interface{}) error {
 	}
 
 	// TODO: Implement actual Avro writing
-	// This requires an Avro library
 	return fmt.Errorf("Avro format support requires additional dependencies. " +
 		"Install with: go get github.com/linkedin/goavro")
 }

@@ -3,6 +3,7 @@ package formats
 import (
 	"database/sql"
 	"fmt"
+	"io"
 	"strings"
 
 	"omnidata/internal/convert"
@@ -30,10 +31,11 @@ type SQLConnection struct {
 }
 
 // readSQL reads data from a SQL database.
-// The path parameter should be a connection string in format:
-// "driver://user:password@host:port/database?query=SELECT * FROM table"
-// or for SQLite: "sqlite3:///path/to/database.db?table=table_name"
-func readSQL(path string) (interface{}, error) {
+// The resource parameter matches the connection string.
+// r (io.Reader) is ignored for SQL sources.
+func readSQL(r io.Reader, resource string) (interface{}, error) {
+	// r is ignored, we use resource as conn string
+	path := resource
 	if path == "" {
 		return nil, fmt.Errorf("SQL read from STDIN is not supported")
 	}
@@ -117,9 +119,9 @@ func readSQL(path string) (interface{}, error) {
 }
 
 // writeSQL writes data to a SQL database table.
-// The path parameter should be a connection string with table name:
-// "driver://user:password@host:port/database?table=table_name"
-func writeSQL(path string, data interface{}) error {
+// w (io.Writer) is ignored.
+func writeSQL(w io.Writer, resource string, data interface{}) error {
+	path := resource
 	if path == "" {
 		return fmt.Errorf("SQL write to STDOUT is not supported")
 	}

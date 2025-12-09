@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"omnidata/internal/convert"
 	"omnidata/internal/inspect"
@@ -90,12 +91,24 @@ func runDiffWithOutput(opts inspect.DiffOptions, outputFormat, outputFile string
 	}
 
 	// Read data from both files
-	data1, err := handler1.ReaderFn(opts.File1)
+	f1, err := os.Open(opts.File1)
+	if err != nil {
+		return fmt.Errorf("failed to open file1: %w", err)
+	}
+	defer f1.Close()
+
+	data1, err := handler1.ReaderFn(f1, opts.File1)
 	if err != nil {
 		return fmt.Errorf("failed to read file1: %w", err)
 	}
 
-	data2, err := handler2.ReaderFn(opts.File2)
+	f2, err := os.Open(opts.File2)
+	if err != nil {
+		return fmt.Errorf("failed to open file2: %w", err)
+	}
+	defer f2.Close()
+
+	data2, err := handler2.ReaderFn(f2, opts.File2)
 	if err != nil {
 		return fmt.Errorf("failed to read file2: %w", err)
 	}

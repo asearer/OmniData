@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"io"
+	"os"
 
 	"omnidata/internal/convert"
 	"omnidata/internal/inspect"
@@ -77,8 +79,23 @@ func runPeekWithOutput(opts inspect.PeekOptions, outputFormat, outputFile string
 		return fmt.Errorf("unsupported format: %s", opts.Format)
 	}
 
+	// Prepare reader
+	var r io.Reader
+	inputPath := opts.InputFile
+	if inputPath == "-" {
+		r = os.Stdin
+		inputPath = ""
+	} else {
+		f, err := os.Open(inputPath)
+		if err != nil {
+			return fmt.Errorf("failed to open input file: %w", err)
+		}
+		defer f.Close()
+		r = f
+	}
+
 	// Read data and infer schema
-	data, err := handler.ReaderFn(opts.InputFile)
+	data, err := handler.ReaderFn(r, inputPath)
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}

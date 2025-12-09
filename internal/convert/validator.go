@@ -18,9 +18,7 @@ func ValidateFormats(from, to string) error {
 	if _, ok := Registry[to]; !ok {
 		return fmt.Errorf("unsupported target format: %s", to)
 	}
-	if from == to {
-		return fmt.Errorf("source and target formats are the same")
-	}
+
 	return nil
 }
 

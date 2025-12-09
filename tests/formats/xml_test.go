@@ -45,7 +45,10 @@ func TestXMLReadWrite(t *testing.T) {
 	}
 
 	// Read XML using the handler
-	data, err := handler.ReaderFn(inputFile.Name())
+	if _, err := inputFile.Seek(0, 0); err != nil {
+		t.Fatalf("failed to seek: %v", err)
+	}
+	data, err := handler.ReaderFn(inputFile, inputFile.Name())
 	if err != nil {
 		t.Fatalf("failed to read XML: %v", err)
 	}
@@ -65,7 +68,7 @@ func TestXMLReadWrite(t *testing.T) {
 	}()
 
 	// Write XML back to output file
-	if err := handler.WriterFn(outputFile.Name(), data); err != nil {
+	if err := handler.WriterFn(outputFile, outputFile.Name(), data); err != nil {
 		t.Fatalf("failed to write XML: %v", err)
 	}
 
@@ -87,21 +90,14 @@ func TestXML_InvalidCases(t *testing.T) {
 	}
 
 	// Invalid type for WriterFn
-	if err := handler.WriterFn("foo.xml", make(chan int)); err == nil {
+	if err := handler.WriterFn(os.Stdout, "foo.xml", make(chan int)); err == nil {
 		t.Error("expected error for invalid type, got nil")
 	}
 
-	// Non-existent file on read
-	_, err := handler.ReaderFn("/tmp/no-such-file.xml")
+	// Nil reader
+	_, err := handler.ReaderFn(nil, "foo.xml")
 	if err == nil {
-		t.Error("expected error for missing file, got nil")
-	}
-
-	// Directory as input
-	dir := os.TempDir()
-	_, err = handler.ReaderFn(dir)
-	if err == nil {
-		t.Error("expected error for directory input, got nil")
+		t.Error("expected error for nil reader, got nil")
 	}
 
 	// Bad/malformed XML
@@ -120,7 +116,9 @@ func TestXML_InvalidCases(t *testing.T) {
 			t.Errorf("failed to remove tmp file: %v", err)
 		}
 	}()
-	_, err = handler.ReaderFn(tmp.Name())
+	fBad, _ := os.Open(tmp.Name())
+	defer fBad.Close()
+	_, err = handler.ReaderFn(fBad, tmp.Name())
 	if err == nil {
 		t.Error("expected error for malformed XML, got nil")
 	}
@@ -138,7 +136,9 @@ func TestXML_InvalidCases(t *testing.T) {
 			t.Errorf("failed to remove empty file: %v", err)
 		}
 	}()
-	_, err = handler.ReaderFn(empty.Name())
+	fEmpty, _ := os.Open(empty.Name())
+	defer fEmpty.Close()
+	_, err = handler.ReaderFn(fEmpty, empty.Name())
 	if err == nil {
 		t.Error("expected error for empty file, got nil")
 	}

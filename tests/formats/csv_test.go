@@ -25,15 +25,29 @@ func TestCSVReadWrite(t *testing.T) {
 	}
 
 	// Read CSV using handler
-	data, err := handler.ReaderFn(inputCSV)
+	f, err := os.Open(inputCSV)
+	if err != nil {
+		t.Fatalf("failed to open CSV file: %v", err)
+	}
+	defer f.Close()
+
+	data, err := handler.ReaderFn(f, inputCSV)
 	if err != nil {
 		t.Fatalf("failed to read CSV: %v", err)
 	}
 
 	// Write CSV back to a temporary output file
+	// Write CSV back to a temporary output file
 	outputCSV := filepath.Join(os.TempDir(), "out.csv")
 	defer os.Remove(outputCSV)
-	if err := handler.WriterFn(outputCSV, data); err != nil {
+
+	fOut, err := os.Create(outputCSV)
+	if err != nil {
+		t.Fatalf("failed to create CSV file: %v", err)
+	}
+	defer fOut.Close()
+
+	if err := handler.WriterFn(fOut, outputCSV, data); err != nil {
 		t.Fatalf("failed to write CSV: %v", err)
 	}
 
@@ -53,25 +67,22 @@ func TestCSV_InvalidCases(t *testing.T) {
 		t.Fatal("CSV handler not registered")
 	}
 	// Invalid type for WriterFn
-	if err := handler.WriterFn("foo.csv", 12345); err == nil {
+	if err := handler.WriterFn(os.Stdout, "foo.csv", 12345); err == nil {
 		t.Error("expected error for invalid type, got nil")
 	}
-	// Non-existent file on read
-	_, err := handler.ReaderFn("/tmp/no-such-file.csv")
+	// Nil reader
+	_, err := handler.ReaderFn(nil, "foo.csv")
 	if err == nil {
-		t.Error("expected error for missing file, got nil")
+		t.Error("expected error for nil reader, got nil")
 	}
-	// Directory as input
-	dir := os.TempDir()
-	_, err = handler.ReaderFn(dir)
-	if err == nil {
-		t.Error("expected error for directory input, got nil")
-	}
+
 	// Empty file
 	tmp, _ := os.CreateTemp(os.TempDir(), "empty.csv")
-	tmp.Close()
+	fEmpty, _ := os.Open(tmp.Name())
+	defer fEmpty.Close()
 	defer os.Remove(tmp.Name())
-	_, err = handler.ReaderFn(tmp.Name())
+
+	_, err = handler.ReaderFn(fEmpty, tmp.Name())
 	if err != nil {
 		// Accept EOF, but no error (should not panic)
 		t.Errorf("unexpected error for empty file: %v", err)

@@ -2,7 +2,7 @@ package formats
 
 import (
 	"fmt"
-	"os"
+	"io"
 
 	"omnidata/internal/convert"
 )
@@ -17,31 +17,21 @@ func init() {
 	})
 }
 
-// readParquet reads Parquet data from the given path.
-// Returns [][]string containing all rows (similar to CSV).
-func readParquet(path string) (interface{}, error) {
-	if path == "" {
-		return nil, fmt.Errorf("Parquet read from STDIN is not supported")
-	}
-
-	// Check if file exists
-	if _, err := os.Stat(path); err != nil {
-		return nil, fmt.Errorf("failed to access Parquet file '%s': %w", path, err)
+// readParquet reads Parquet data from the given reader.
+func readParquet(r io.Reader, resource string) (interface{}, error) {
+	if r == nil {
+		return nil, fmt.Errorf("readParquet requires a valid reader")
 	}
 
 	// TODO: Implement actual Parquet reading
-	// This requires a Parquet library like github.com/xitongsys/parquet-go
-	// or github.com/parquet-go/parquet-go
-	// For now, return an error indicating the feature needs implementation
 	return nil, fmt.Errorf("Parquet format support requires additional dependencies. " +
 		"Install with: go get github.com/xitongsys/parquet-go")
 }
 
-// writeParquet writes data to a Parquet file at the given path.
-// Expects data as [][]string (rows and columns).
-func writeParquet(path string, data interface{}) error {
-	if path == "" {
-		return fmt.Errorf("Parquet write to STDOUT is not supported")
+// writeParquet writes data to a Parquet file to the given writer.
+func writeParquet(w io.Writer, resource string, data interface{}) error {
+	if w == nil {
+		return fmt.Errorf("writeParquet requires a valid writer")
 	}
 
 	if _, ok := data.([][]string); !ok {
@@ -49,7 +39,6 @@ func writeParquet(path string, data interface{}) error {
 	}
 
 	// TODO: Implement actual Parquet writing
-	// This requires a Parquet library
 	return fmt.Errorf("Parquet format support requires additional dependencies. " +
 		"Install with: go get github.com/xitongsys/parquet-go")
 }

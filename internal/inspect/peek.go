@@ -2,6 +2,7 @@ package inspect
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"reflect"
 	"strconv"
@@ -42,8 +43,21 @@ func RunPeek(opts PeekOptions) error {
 		}
 	}
 
+	// Open input
+	var r io.Reader
+	if inputPath == "" {
+		r = os.Stdin
+	} else {
+		f, err := os.Open(inputPath)
+		if err != nil {
+			return fmt.Errorf("failed to open input file: %w", err)
+		}
+		defer f.Close()
+		r = f
+	}
+
 	// Read data
-	data, err := handler.ReaderFn(inputPath)
+	data, err := handler.ReaderFn(r, inputPath)
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}

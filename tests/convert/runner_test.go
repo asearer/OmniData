@@ -3,6 +3,7 @@ package convert_test
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"omnidata/internal/convert"
@@ -72,6 +73,63 @@ func TestRunCSVtoJSON(t *testing.T) {
 	}
 	if len(data) == 0 {
 		t.Fatal("output JSON is empty")
+	}
+}
+
+// TestRunGzip tests transparent Gzip handling.
+func TestRunGzip(t *testing.T) {
+	// Create a simple CSV file
+	inputCSV := tempFile(t, []byte("name,age\nAlice,30"))
+	defer os.Remove(inputCSV)
+
+	// Output file with .gz extension
+	outputGZ := filepath.Join(os.TempDir(), "test_out.csv.gz")
+	defer os.Remove(outputGZ)
+
+	opts := convert.Options{
+		InputFile:  inputCSV,
+		OutputFile: outputGZ,
+		From:       "csv",
+		To:         "csv",
+	}
+
+	if err := convert.Run(opts); err != nil {
+		t.Fatalf("conversion to gzip failed: %v", err)
+	}
+
+	// Verify output exists and is not empty
+	stat, err := os.Stat(outputGZ)
+	if err != nil {
+		t.Fatalf("output gz file missing: %v", err)
+	}
+	if stat.Size() == 0 {
+		t.Fatal("output gz file is empty")
+	}
+
+	// Try reading it back from .gz to .csv
+	// This verifies decompression works too
+	outputCSVRec := filepath.Join(os.TempDir(), "test_rec.csv")
+	defer os.Remove(outputCSVRec)
+
+	opts2 := convert.Options{
+		InputFile:  outputGZ,
+		OutputFile: outputCSVRec,
+		From:       "csv",
+		To:         "csv",
+	}
+
+	if err := convert.Run(opts2); err != nil {
+		t.Fatalf("conversion from gzip failed: %v", err)
+	}
+
+	// Verify recovered CSV matches original (roughly)
+	data, err := os.ReadFile(outputCSVRec)
+	if err != nil {
+		t.Fatalf("failed to read recovered csv: %v", err)
+	}
+	content := string(data)
+	if !strings.Contains(content, "Alice") || !strings.Contains(content, "30") {
+		t.Errorf("recovered csv content mismatch. Got: %s", content)
 	}
 }
 

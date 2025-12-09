@@ -15,9 +15,9 @@ func TestValidateFormats(t *testing.T) {
 		t.Fatalf("valid formats flagged as invalid: %v", err)
 	}
 
-	// Invalid: source and target are the same
-	if err := convert.ValidateFormats("csv", "csv"); err == nil {
-		t.Fatal("expected error when source and target formats are the same")
+	// Same format - allowed now
+	if err := convert.ValidateFormats("json", "json"); err != nil {
+		t.Errorf("unexpected error for same format: %v", err)
 	}
 
 	// Invalid: unsupported target format

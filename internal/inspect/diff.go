@@ -62,13 +62,26 @@ func RunDiff(opts DiffOptions) error {
 		return fmt.Errorf("file2 does not exist: %s", path2)
 	}
 
-	// Read data from both files
-	data1, err := handler1.ReaderFn(path1)
+	// Open and read file1
+	f1, err := os.Open(path1)
+	if err != nil {
+		return fmt.Errorf("failed to open file1: %w", err)
+	}
+	defer f1.Close()
+
+	data1, err := handler1.ReaderFn(f1, path1)
 	if err != nil {
 		return fmt.Errorf("failed to read file1: %w", err)
 	}
 
-	data2, err := handler2.ReaderFn(path2)
+	// Open and read file2
+	f2, err := os.Open(path2)
+	if err != nil {
+		return fmt.Errorf("failed to open file2: %w", err)
+	}
+	defer f2.Close()
+
+	data2, err := handler2.ReaderFn(f2, path2)
 	if err != nil {
 		return fmt.Errorf("failed to read file2: %w", err)
 	}

@@ -1,6 +1,9 @@
 package convert
 
-import "strings"
+import (
+	"io"
+	"strings"
+)
 
 /*
 FormatHandler defines a data format and its associated read/write functions.
@@ -12,8 +15,8 @@ Responsibilities:
 */
 type FormatHandler struct {
 	Name     string
-	ReaderFn func(path string) (interface{}, error)
-	WriterFn func(path string, data interface{}) error
+	ReaderFn func(r io.Reader, resource string) (interface{}, error)
+	WriterFn func(w io.Writer, resource string, data interface{}) error
 }
 
 /*

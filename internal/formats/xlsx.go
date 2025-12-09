@@ -2,6 +2,7 @@ package formats
 
 import (
 	"fmt"
+	"io"
 	"omnidata/internal/convert"
 
 	"github.com/xuri/excelize/v2"
@@ -16,17 +17,16 @@ func init() {
 	})
 }
 
-// readXLSX reads an XLSX file from the given path.
+// readXLSX reads an XLSX file from the given reader.
 // Returns a map of sheet names to [][]string representing rows and columns.
-// If path is empty, this currently returns an error (STDIN not supported for XLSX).
-func readXLSX(path string) (interface{}, error) {
-	if path == "" {
-		return nil, fmt.Errorf("XLSX read from STDIN is not supported")
+func readXLSX(r io.Reader, resource string) (interface{}, error) {
+	if r == nil {
+		return nil, fmt.Errorf("readXLSX requires a valid reader")
 	}
 
-	f, err := excelize.OpenFile(path)
+	f, err := excelize.OpenReader(r)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open XLSX file '%s': %w", path, err)
+		return nil, fmt.Errorf("failed to open XLSX from reader: %w", err)
 	}
 	defer f.Close()
 
@@ -44,12 +44,11 @@ func readXLSX(path string) (interface{}, error) {
 	return result, nil
 }
 
-// writeXLSX writes data to an XLSX file at the given path.
+// writeXLSX writes data to an XLSX file to the given writer.
 // Expects data as map[string][][]string (sheet name -> rows).
-// STDOUT writing is not supported because XLSX is binary.
-func writeXLSX(path string, data interface{}) error {
-	if path == "" {
-		return fmt.Errorf("XLSX write to STDOUT is not supported")
+func writeXLSX(w io.Writer, resource string, data interface{}) error {
+	if w == nil {
+		return fmt.Errorf("writeXLSX requires a valid writer")
 	}
 
 	x, ok := data.(map[string][][]string)
@@ -82,8 +81,9 @@ func writeXLSX(path string, data interface{}) error {
 		f.SetActiveSheet(index)
 	}
 
-	if err := f.SaveAs(path); err != nil {
-		return fmt.Errorf("failed to save XLSX file '%s': %w", path, err)
+	// Write to the provided writer
+	if err := f.Write(w); err != nil {
+		return fmt.Errorf("failed to write XLSX to '%s': %w", resource, err)
 	}
 	return nil
 }
