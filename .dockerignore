@@ -1,0 +1,27 @@
+# Version control
+.git
+.gitignore
+.github
+
+# Build output
+omnidata
+*.exe
+*.dll
+*.so
+
+# Dependencies
+vendor/
+
+# IDE/Editor
+.idea/
+.vscode/
+*.swp
+*~
+
+# Testing
+tests/
+coverage.out
+
+# Documentation/Other
+*.md
+LICENSE
